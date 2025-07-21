@@ -11,7 +11,7 @@ const Header = () => {
 
   const onClickHandler = () => {
     if(user) {
-      navigate('/result')
+      navigate('/results')
 
     }
     else{

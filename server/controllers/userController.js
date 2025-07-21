@@ -63,16 +63,14 @@ const loginUser = async (req,res) => {
 
 const userCredits = async (req, res) => {
     try {
-        // Ideally, get userId from decoded JWT token, but for now from req.body:
-        const { userId } = req.body;
+        const userId = req.user.id;  // <-- get userId from req.user
 
         const user = await userModel.findById(userId);
 
         if (!user) {
-            return res.json({ success: false, message: "User not found" });
+            return res.json({ success: false, message: 'User not found' });
         }
 
-        // Use actual fields from user
         res.json({ success: true, credits: user.creditBalance, user: { name: user.name } });
     } catch (error) {
         console.log(error.message);
@@ -80,4 +78,4 @@ const userCredits = async (req, res) => {
     }
 };
 
-export {registerUser, loginUser, userCredits}
+export {registerUser, loginUser, userCredits} 

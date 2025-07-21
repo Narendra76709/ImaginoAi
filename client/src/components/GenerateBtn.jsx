@@ -10,7 +10,7 @@ const GenerateBtn = () => {
 
   const onClickHandler = () => {
     if (user) {
-      navigate('/result')
+      navigate('/results')
     } else {
       setShowLogin(true)
     }
