@@ -1,4 +1,4 @@
-import userModel from '../models/useModel';
+import userModel from '../models/useModel.js';
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 
@@ -60,4 +60,24 @@ const loginUser = async (req,res) => {
     }
 }
 
-export default {registerUser, loginUser}
+
+const userCredits = async (req, res) => {
+    try {
+        // Ideally, get userId from decoded JWT token, but for now from req.body:
+        const { userId } = req.body;
+
+        const user = await userModel.findById(userId);
+
+        if (!user) {
+            return res.json({ success: false, message: "User not found" });
+        }
+
+        // Use actual fields from user
+        res.json({ success: true, credits: user.creditBalance, user: { name: user.name } });
+    } catch (error) {
+        console.log(error.message);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+export {registerUser, loginUser, userCredits}
