@@ -33,22 +33,24 @@ const AppContextProvider = (props) => {
     const generateImage = async (prompt) => { // ✅ Fix typo: `aysnc` ➝ `async`
         try {
             const { data } = await axios.post(
-                backendUrl + '/api/image/generate-image',
+                backendUrl + 'api/image/generate-image',
                 { prompt },
                 { headers: { token } }
             );
 
             if (data.success) {
+    
                 loadCreditsData();
                 return data.resultImage;
             } else {
                 toast.error(data.message);
                 loadCreditsData();
                 if (data.creditBalance === 0) {
-                    navigate('/buy'); // ✅ Make sure this route exists
+                    navigate('/buy-credits'); // ✅ Make sure this route exists
                 }
             }
         } catch (error) { // ✅ Fix typo: `erro` ➝ `error`
+            console.log("Error");
             toast.error(error.message);
         }
     };
