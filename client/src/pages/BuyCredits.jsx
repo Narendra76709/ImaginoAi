@@ -24,11 +24,25 @@ const BuyCredits = () => {
       name: 'Credits Payment',
       description: 'Purchase Credits',
       order_id: order.id,
+      receipt: order.receipt,
       handler: async (response) => {
-        console.log('Payment success:', response);
-        toast.success('Payment successful!');
-        // You can call backend to verify payment and update credits
-        await loadCreditsData(); // Optional, if implemented
+        try {
+          const { data } = await axios.post(
+            backendUrl + 'api/user/verify-razor',
+            response,
+            { headers: { token } }
+          );
+
+          if (data.success) {
+            await loadCreditsData(); // Make sure it's awaited
+            navigate('/');
+            toast.success('Credits added successfully!');
+          } else {
+            toast.error('Payment verification failed');
+          }
+        } catch (error) {
+          toast.error(error.message);
+        }
       },
       theme: {
         color: "#333",

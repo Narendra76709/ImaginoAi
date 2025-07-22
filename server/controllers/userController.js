@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import Razorpay from 'razorpay';
 
+
 // ✅ Razorpay Instance
 const razorpayInstance = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -74,7 +75,8 @@ const userCredits = async (req, res) => {
 
 const paymentRazorpay = async (req, res) => {
   try {
-    const { userId, planId } = req.body;
+    const { planId } = req.body;
+    const userId = req.user.id; 
 
     if (!userId || !planId) {
       return res.json({ success: false, message: 'Missing Details' });
@@ -122,10 +124,10 @@ const paymentRazorpay = async (req, res) => {
     const options = {
       amount: amount * 100, // amount in paisa
       currency: process.env.CURRENCY || 'INR',
-      receipt: `${newTransaction._id}`,
+      receipt: newTransaction._id,
     };
 
-    razorpayInstance.orders.create(options, (error, order) => {
+    await razorpayInstance.orders.create(options, (error, order) => {
       if (error) {
         console.log(error);
         return res.json({ success: false, message: error.message });
@@ -138,4 +140,37 @@ const paymentRazorpay = async (req, res) => {
   }
 };
 
-export { registerUser, loginUser, userCredits, paymentRazorpay };
+const verifyRazorpay = async (req, res) => {
+  try {
+    const { razorpay_order_id } = req.body;
+
+    const orderInfo = await razorpayInstance.orders.fetch(razorpay_order_id);
+
+    if (orderInfo.status === 'paid') {
+      const transactionData = await transactionModel.findById(orderInfo.receipt);
+
+      if (!transactionData || transactionData.payment) {
+        return res.json({ success: false, message: 'Invalid or already processed transaction' });
+      }
+
+      const userData = await userModel.findById(transactionData.userId);
+      if (!userData) {
+        return res.json({ success: false, message: 'User not found' });
+      }
+
+      const newBalance = (userData.creditBalance || 0) + transactionData.credits;
+
+      await userModel.findByIdAndUpdate(userData._id, { creditBalance: newBalance });
+      await transactionModel.findByIdAndUpdate(transactionData._id, { payment: true });
+
+      return res.json({ success: true, message: 'Credits added successfully' });
+    } else {
+      return res.json({ success: false, message: 'Payment not completed' });
+    }
+  } catch (error) {
+    console.error('Payment verification error:', error);
+    return res.json({ success: false, message: error.message });
+  }
+};
+
+export { registerUser, loginUser, userCredits, paymentRazorpay, verifyRazorpay };
